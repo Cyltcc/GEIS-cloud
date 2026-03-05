@@ -33,19 +33,19 @@ const router = createRouter({
 						{
 							path: "group",
 							name: "DeviceGroup",
-							component: () => import("@/views/DeviceGroup.vue"),
+							component: () => import("@/views/device/DeviceGroup.vue"),
 							meta: { title: "设备分组" },
 						},
 						{
 							path: "list",
 							name: "DeviceList",
-							component: () => import("@/views/DeviceList.vue"),
+							component: () => import("@/views/device/DeviceList.vue"),
 							meta: { title: "设备列表" },
 						},
 						{
 							path: "favorites",
 							name: "DeviceFavorites",
-							component: () => import("@/views/DeviceList.vue"), // Placeholder
+							component: () => import("@/views/device/DeviceList.vue"), // Placeholder
 							meta: { title: "设备收藏" },
 						},
 					],
@@ -53,7 +53,7 @@ const router = createRouter({
 				{
 					path: "data-mgmt",
 					name: "DataMgmt",
-					component: () => import("@/views/Dashboard.vue"), // Placeholder
+					component: () => import("@/views/data/DataMgmt.vue"), // Placeholder
 					meta: { title: "数据管理" },
 				},
 			],

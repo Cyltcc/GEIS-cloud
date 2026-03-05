@@ -1,3 +1,46 @@
+<script setup lang="ts">
+import { ref } from 'vue'
+import GModal from '@/components/GModal.vue'
+
+const showAdd = ref(false)
+const form = ref({ name: '', devices: [] })
+const formRef = ref()
+
+const keyword = ref('')
+
+const columns = [
+  { title: '序号', key: 'index', width: 80 },
+  { title: '分组名称', dataIndex: 'name', key: 'name' },
+  { title: '设备数量', dataIndex: 'count', key: 'count' },
+  { title: '设备状态', key: 'status' },
+  { title: '创建时间', dataIndex: 'createTime', key: 'createTime' },
+  { title: '操作', key: 'action', width: 200, align: 'right' },
+]
+
+const dataSource = ref([
+  {
+    id: 1,
+    name: '分组名称一',
+    count: 8,
+    status: {
+      normal: 5,
+      warning: 2,
+      error: 1,
+    },
+    createTime: '2025-11-12 13:20:12',
+  },
+])
+
+const handleSearch = () => {
+  console.log('Search:', keyword.value)
+}
+
+const submitAddGroup = () => {
+  console.log('Submit Add Group:', form.value)
+  showAdd.value = false
+}
+</script>
+
 <template>
   <div class="device-group-container">
 
@@ -58,49 +101,6 @@
     </a-form>
   </g-modal>
 </template>
-
-<script setup lang="ts">
-import { ref } from 'vue'
-import GModal from '@/components/GModal.vue'
-
-const showAdd = ref(false)
-const form = ref({ name: '', devices: [] })
-const formRef = ref()
-
-const keyword = ref('')
-
-const columns = [
-  { title: '序号', key: 'index', width: 80 },
-  { title: '分组名称', dataIndex: 'name', key: 'name' },
-  { title: '设备数量', dataIndex: 'count', key: 'count' },
-  { title: '设备状态', key: 'status' },
-  { title: '创建时间', dataIndex: 'createTime', key: 'createTime' },
-  { title: '操作', key: 'action', width: 200, align: 'right' },
-]
-
-const dataSource = ref([
-  {
-    id: 1,
-    name: '分组名称一',
-    count: 8,
-    status: {
-      normal: 5,
-      warning: 2,
-      error: 1,
-    },
-    createTime: '2025-11-12 13:20:12',
-  },
-])
-
-const handleSearch = () => {
-  console.log('Search:', keyword.value)
-}
-
-const submitAddGroup = () => {
-  console.log('Submit Add Group:', form.value)
-  showAdd.value = false
-}
-</script>
 
 <style scoped lang="scss">
 .device-group-container {

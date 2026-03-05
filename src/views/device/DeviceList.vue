@@ -1,119 +1,3 @@
-<template>
-  <div class="device-list-container">
-
-    <div class="filter-container">
-      <a-row :gutter="16"
-             align="middle">
-        <a-col>
-          <a-select v-model:value="filters.group"
-                    placeholder="选择分组"
-                    style="width: 150px">
-            <a-select-option value="group1">分组1</a-select-option>
-            <a-select-option value="group2">分组2</a-select-option>
-          </a-select>
-        </a-col>
-        <a-col>
-          <a-select v-model:value="filters.scene"
-                    placeholder="选择场景"
-                    style="width: 150px">
-            <a-select-option value="farm">农田</a-select-option>
-            <a-select-option value="forest">森林</a-select-option>
-          </a-select>
-        </a-col>
-        <a-col>
-          <a-select v-model:value="filters.status"
-                    placeholder="选择状态"
-                    style="width: 150px">
-            <a-select-option value="normal">正常</a-select-option>
-            <a-select-option value="offline">离线</a-select-option>
-          </a-select>
-        </a-col>
-        <a-col>
-          <a-input-search v-model:value="filters.keyword"
-                          placeholder="输入关键词以检索"
-                          style="width: 250px"
-                          enter-button
-                          @search="handleSearch" />
-        </a-col>
-        <a-col>
-          <a-button type="primary"
-                    @click="handleSearch">查询</a-button>
-          <a-button style="margin-left: 8px"
-                    @click="handleReset">重置</a-button>
-        </a-col>
-        <a-col style="margin-left: auto">
-          <a-button type="primary"
-                    class="action-btn">收藏</a-button>
-          <a-button class="action-btn">刷新</a-button>
-        </a-col>
-      </a-row>
-    </div>
-
-    <div class="column-control">
-      <span>表头字段显示控制：</span>
-      <a-checkbox-group v-model:value="visibleColumns">
-        <a-checkbox value="index">序号</a-checkbox>
-        <a-checkbox value="sn">SN</a-checkbox>
-        <a-checkbox value="name">名称</a-checkbox>
-        <a-checkbox value="iccid">iccid</a-checkbox>
-        <a-checkbox value="group">分组</a-checkbox>
-        <a-checkbox value="scene">场景</a-checkbox>
-        <a-checkbox value="power">电量</a-checkbox>
-        <a-checkbox value="signal">信号</a-checkbox>
-        <a-checkbox value="status">状态</a-checkbox>
-        <a-checkbox value="location">位置</a-checkbox>
-        <a-checkbox value="enabledTime">设备启用时间</a-checkbox>
-        <a-checkbox value="lastOnline">最新上线时间</a-checkbox>
-        <a-checkbox value="lastReport">最新数据上报时间</a-checkbox>
-      </a-checkbox-group>
-    </div>
-
-    <a-table :columns="tableColumns"
-             :data-source="dataSource"
-             :row-selection="{
-        selectedRowKeys: selectedRowKeys,
-        onChange: onSelectChange,
-      }"
-             :pagination="pagination"
-             row-key="id">
-      <template #bodyCell="{ column, record, index }">
-        <template v-if="column.key === 'index'">
-          {{ index + 1 }}
-        </template>
-
-        <template v-if="column.key === 'power'">
-          <img :src="getBatteryIcon(record.power)"
-               class="icon-svg"
-               alt="battery" />
-        </template>
-
-        <template v-if="column.key === 'signal'">
-          <img :src="getSignalIcon(record.signal)"
-               class="icon-svg"
-               alt="signal" />
-        </template>
-
-        <template v-if="column.key === 'status'">
-          <img :src="getStatusIcon(record.status)"
-               class="icon-svg"
-               alt="status" />
-        </template>
-
-        <template v-if="column.key === 'action'">
-          <a class="action-link">详情</a>
-          <a-divider type="vertical" />
-          <a class="action-link">分享</a>
-          <a-divider type="vertical" />
-          <a class="action-link"
-             v-if="!record.isFavorite">收藏</a>
-          <a class="action-link"
-             v-else>取消收藏</a>
-        </template>
-      </template>
-    </a-table>
-  </div>
-</template>
-
 <script setup lang="ts">
 import { ref, computed, reactive } from 'vue'
 import battery0Icon from '@/assets/icons/battery-0.svg'
@@ -355,6 +239,122 @@ const getStatusIcon = (status: string) => {
   return offlineIcon
 }
 </script>
+
+<template>
+  <div class="device-list-container">
+
+    <div class="filter-container">
+      <a-row :gutter="16"
+             align="middle">
+        <a-col>
+          <a-select v-model:value="filters.group"
+                    placeholder="选择分组"
+                    style="width: 150px">
+            <a-select-option value="group1">分组1</a-select-option>
+            <a-select-option value="group2">分组2</a-select-option>
+          </a-select>
+        </a-col>
+        <a-col>
+          <a-select v-model:value="filters.scene"
+                    placeholder="选择场景"
+                    style="width: 150px">
+            <a-select-option value="farm">农田</a-select-option>
+            <a-select-option value="forest">森林</a-select-option>
+          </a-select>
+        </a-col>
+        <a-col>
+          <a-select v-model:value="filters.status"
+                    placeholder="选择状态"
+                    style="width: 150px">
+            <a-select-option value="normal">正常</a-select-option>
+            <a-select-option value="offline">离线</a-select-option>
+          </a-select>
+        </a-col>
+        <a-col>
+          <a-input-search v-model:value="filters.keyword"
+                          placeholder="输入关键词以检索"
+                          style="width: 250px"
+                          enter-button
+                          @search="handleSearch" />
+        </a-col>
+        <a-col>
+          <a-button type="primary"
+                    @click="handleSearch">查询</a-button>
+          <a-button style="margin-left: 8px"
+                    @click="handleReset">重置</a-button>
+        </a-col>
+        <a-col style="margin-left: auto">
+          <a-button type="primary"
+                    class="action-btn">收藏</a-button>
+          <a-button class="action-btn">刷新</a-button>
+        </a-col>
+      </a-row>
+    </div>
+
+    <div class="column-control">
+      <span>表头字段显示控制：</span>
+      <a-checkbox-group v-model:value="visibleColumns">
+        <a-checkbox value="index">序号</a-checkbox>
+        <a-checkbox value="sn">SN</a-checkbox>
+        <a-checkbox value="name">名称</a-checkbox>
+        <a-checkbox value="iccid">iccid</a-checkbox>
+        <a-checkbox value="group">分组</a-checkbox>
+        <a-checkbox value="scene">场景</a-checkbox>
+        <a-checkbox value="power">电量</a-checkbox>
+        <a-checkbox value="signal">信号</a-checkbox>
+        <a-checkbox value="status">状态</a-checkbox>
+        <a-checkbox value="location">位置</a-checkbox>
+        <a-checkbox value="enabledTime">设备启用时间</a-checkbox>
+        <a-checkbox value="lastOnline">最新上线时间</a-checkbox>
+        <a-checkbox value="lastReport">最新数据上报时间</a-checkbox>
+      </a-checkbox-group>
+    </div>
+
+    <a-table :columns="tableColumns"
+             :data-source="dataSource"
+             :row-selection="{
+        selectedRowKeys: selectedRowKeys,
+        onChange: onSelectChange,
+      }"
+             :pagination="pagination"
+             row-key="id">
+      <template #bodyCell="{ column, record, index }">
+        <template v-if="column.key === 'index'">
+          {{ index + 1 }}
+        </template>
+
+        <template v-if="column.key === 'power'">
+          <img :src="getBatteryIcon(record.power)"
+               class="icon-svg"
+               alt="battery" />
+        </template>
+
+        <template v-if="column.key === 'signal'">
+          <img :src="getSignalIcon(record.signal)"
+               class="icon-svg"
+               alt="signal" />
+        </template>
+
+        <template v-if="column.key === 'status'">
+          <img :src="getStatusIcon(record.status)"
+               class="icon-svg"
+               alt="status" />
+        </template>
+
+        <template v-if="column.key === 'action'">
+          <a class="action-link">详情</a>
+          <a-divider type="vertical" />
+          <a class="action-link">分享</a>
+          <a-divider type="vertical" />
+          <a class="action-link"
+             v-if="!record.isFavorite">收藏</a>
+          <a class="action-link"
+             v-else>取消收藏</a>
+        </template>
+      </template>
+    </a-table>
+  </div>
+</template>
 
 <style scoped lang="scss">
 .device-list-container {
