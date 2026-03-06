@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <a-layout class="layout-container">
     <div class="header">
       <div class="header-left">
@@ -39,16 +39,16 @@
                 @select="onSelect" />
       </a-layout-sider>
       <a-layout>
-        <!-- 面包屑导航 -->
         <div class="breadcrumb-container">
-          <a-breadcrumb :routes="breadcrumbItems">
-            <template #itemRender="{ route: item }">
+          <a-breadcrumb separator=">">
+            <a-breadcrumb-item v-for="(item, index) in breadcrumbItems"
+                               :key="`${item.path || item.title}-${index}`">
               <span v-if="item.title"
                     :class="{ 'breadcrumb-link': item.clickable }"
                     @click="item.clickable && navigateTo(item.path)">
                 {{ item.title }}
               </span>
-            </template>
+            </a-breadcrumb-item>
           </a-breadcrumb>
         </div>
 
@@ -110,7 +110,8 @@ const getActiveRootMenuKey = () => {
     selectedKey === 'Device' ||
     selectedKey === 'DeviceGroup' ||
     selectedKey === 'DeviceList' ||
-    selectedKey === 'DeviceFavorites'
+    selectedKey === 'DeviceFavorites' ||
+    selectedKey === 'DeviceDetail'
   ) {
     return 'Device'
   }
@@ -195,11 +196,31 @@ const onSelect = ({ key }: { key: string }) => {
   state.selectedKeys = [key]
 }
 
-// 生成面包屑数据
 const breadcrumbItems = computed(() => {
   const items: BreadcrumbItem[] = []
 
-  // 只获取最后一个路由（跳过根路径），显示当前页面名称
+  const isDeviceDetailRoute =
+    route.matched.some((record) => record.name === 'DeviceDetail') ||
+    route.path.startsWith('/device/detail/')
+
+  if (isDeviceDetailRoute) {
+    items.push({
+      title: '设备列表',
+      path: '/device/list',
+      clickable: true,
+    })
+
+    const rawName = route.query.name
+    const deviceName = String(
+      Array.isArray(rawName) ? rawName[0] : rawName ?? ''
+    ).trim()
+    items.push({
+      title: deviceName ? `设备详情（${deviceName}）` : '设备详情',
+      clickable: false,
+    })
+    return items
+  }
+
   const currentRoute = route.matched[route.matched.length - 1]
   if (currentRoute?.meta?.title) {
     items.push({
@@ -212,7 +233,6 @@ const breadcrumbItems = computed(() => {
   return items
 })
 
-// 面包屑导航跳转
 const navigateTo = (path: string | undefined) => {
   if (path) {
     router.push(path)
@@ -223,7 +243,10 @@ watch(
   () => route.name,
   (val) => {
     if (val) {
-      state.selectedKeys = [val as string]
+      const routeName = val as string
+      state.selectedKeys = [
+        routeName === 'DeviceDetail' ? 'DeviceList' : routeName,
+      ]
       // Auto expand submenu if needed
       if (val.toString().startsWith('Device')) {
         if (!state.openKeys.includes('Device')) {
@@ -327,6 +350,7 @@ watch(
   }
 
   .content {
+    height: calc(100vh - 56px - 40px - 24px);
     margin: 24px 16px;
     padding: 0;
     overflow: auto;

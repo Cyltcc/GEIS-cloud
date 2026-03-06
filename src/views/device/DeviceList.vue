@@ -1,5 +1,17 @@
-<script setup lang="ts">
-import { ref, computed, reactive } from 'vue'
+﻿<script setup lang="ts">
+import { computed, onMounted, reactive, ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { getDevicesList } from '@/api/devices/devices'
+import {
+  applyLocalFilters,
+  extractPagination,
+  mapDeviceRows,
+} from './deviceList.helpers'
+import type {
+  DeviceListResponse,
+  DeviceStatus,
+  DeviceTableItem,
+} from './deviceList.helpers'
 import battery0Icon from '@/assets/icons/battery-0.svg'
 import battery1Icon from '@/assets/icons/battery-1.svg'
 import battery2Icon from '@/assets/icons/battery-2.svg'
@@ -12,7 +24,14 @@ import normalIcon from '@/assets/icons/normal.svg'
 import warningIcon from '@/assets/icons/warning.svg'
 import offlineIcon from '@/assets/icons/offline.svg'
 
-const filters = reactive({
+const router = useRouter()
+
+const filters = reactive<{
+  group?: string
+  scene?: string
+  status?: DeviceStatus
+  keyword: string
+}>({
   group: undefined,
   scene: undefined,
   status: undefined,
@@ -70,154 +89,77 @@ const tableColumns = computed(() => {
   })
 })
 
-const dataSource = ref([
-  {
-    id: 1,
-    name: '黄河水电6',
-    scene: '农田',
-    power: 80,
-    signal: 3,
-    status: 'normal',
-    location: '--',
-    enabledTime: '2025/11/24 10:33:33',
-    lastOnline: '2025/11/24 10:33:33',
-    lastReport: '2025/11/24 10:33:33',
-    isFavorite: false,
-  },
-  {
-    id: 2,
-    name: '黄河水电6',
-    scene: '森林',
-    power: 60,
-    signal: 2,
-    status: 'warning',
-    location: '--',
-    enabledTime: '2025/11/24 10:33:33',
-    lastOnline: '2025/11/24 10:33:33',
-    lastReport: '2025/11/24 10:33:33',
-    isFavorite: true,
-  },
-  {
-    id: 3,
-    name: '黄河水电6',
-    scene: '草地、荒漠',
-    power: 10,
-    signal: 1,
-    status: 'error',
-    location: '--',
-    enabledTime: '2025/11/24 10:33:33',
-    lastOnline: '2025/11/24 10:33:33',
-    lastReport: '2025/11/24 10:33:33',
-    isFavorite: false,
-  },
-  {
-    id: 4,
-    name: '黄河水电6',
-    scene: '水体、湿地',
-    power: 90,
-    signal: 4,
-    status: 'normal',
-    location: '--',
-    enabledTime: '2025/11/24 10:33:33',
-    lastOnline: '2025/11/24 10:33:33',
-    lastReport: '2025/11/24 10:33:33',
-    isFavorite: false,
-  },
-  {
-    id: 5,
-    name: '黄河水电6',
-    scene: '药材',
-    power: 95,
-    signal: 4,
-    status: 'normal',
-    location: '--',
-    enabledTime: '2025/11/24 10:33:33',
-    lastOnline: '2025/11/24 10:33:33',
-    lastReport: '2025/11/24 10:33:33',
-    isFavorite: false,
-  },
-  {
-    id: 6,
-    name: '黄河水电6',
-    scene: '农田',
-    power: 95,
-    signal: 4,
-    status: 'normal',
-    location: '--',
-    enabledTime: '2025/11/24 10:33:33',
-    lastOnline: '2025/11/24 10:33:33',
-    lastReport: '2025/11/24 10:33:33',
-    isFavorite: false,
-  },
-  {
-    id: 7,
-    name: '黄河水电6',
-    scene: '农田',
-    power: 50,
-    signal: 2,
-    status: 'normal',
-    location: '--',
-    enabledTime: '2025/11/24 10:33:33',
-    lastOnline: '2025/11/24 10:33:33',
-    lastReport: '2025/11/24 10:33:33',
-    isFavorite: false,
-  },
-  {
-    id: 8,
-    name: '地理所生境束捕赛',
-    scene: '农田',
-    power: 90,
-    signal: 2,
-    status: 'normal',
-    location: '--',
-    enabledTime: '2025/11/24 10:33:33',
-    lastOnline: '2025/11/24 10:33:33',
-    lastReport: '2025/11/24 10:33:33',
-    isFavorite: false,
-  },
-  {
-    id: 9,
-    name: '贵州省珍稀濒危野生植物监测',
-    scene: '农田',
-    power: 90,
-    signal: 2,
-    status: 'normal',
-    location: '贵州省梵净山',
-    enabledTime: '2025/11/24 10:33:33',
-    lastOnline: '2025/11/24 10:33:33',
-    lastReport: '2025/11/24 10:33:33',
-    isFavorite: false,
-  },
-])
+const dataSource = ref<DeviceTableItem[]>([])
+const selectedRowKeys = ref<Array<number | string>>([])
+const loading = ref(false)
 
-const selectedRowKeys = ref([])
-const onSelectChange = (keys: any) => {
+const onSelectChange = (keys: Array<number | string>) => {
   selectedRowKeys.value = keys
 }
 
 const pagination = reactive({
-  total: 200,
+  total: 0,
   current: 1,
   pageSize: 10,
   showSizeChanger: true,
   showQuickJumper: true,
-  showTotal: (total: number) => `共${total}条数据`,
+  showTotal: (total: number) => `共 ${total} 条数据`,
 })
 
-const handleSearch = () => {
-  console.log('Search:', filters)
+const requestParams = computed(() => ({
+  page: pagination.current,
+  limit: pagination.pageSize,
+  per_page: pagination.pageSize,
+  keyword: filters.keyword || undefined,
+}))
+
+const fetchDeviceList = async (): Promise<void> => {
+  loading.value = true
+  try {
+    const response = (await getDevicesList(
+      requestParams.value
+    )) as DeviceListResponse
+
+    const rawList = Array.isArray(response?.data) ? response.data : []
+    const mappedList = mapDeviceRows(rawList)
+    const filteredList = applyLocalFilters(mappedList, filters)
+    const paginationMeta = extractPagination(response, filteredList.length)
+
+    dataSource.value = filteredList
+    pagination.current = paginationMeta.current ?? pagination.current
+    pagination.pageSize = paginationMeta.pageSize ?? pagination.pageSize
+    pagination.total = paginationMeta.total
+  } finally {
+    loading.value = false
+  }
 }
 
-const handleReset = () => {
+const handleSearch = (): void => {
+  pagination.current = 1
+  fetchDeviceList()
+}
+
+const handleReset = (): void => {
   filters.group = undefined
   filters.scene = undefined
   filters.status = undefined
   filters.keyword = ''
+  pagination.current = 1
+  fetchDeviceList()
+}
+
+const handleTableChange = (pager: {
+  current?: number
+  pageSize?: number
+}): void => {
+  pagination.current = pager.current ?? pagination.current
+  pagination.pageSize = pager.pageSize ?? pagination.pageSize
+  fetchDeviceList()
 }
 
 const getBatteryIcon = (power: number) => {
-  if (power >= 70) return battery2Icon
-  if (power >= 30) return battery1Icon
+  if (power >= 0.5) return battery2Icon
+  if (power >= 0.2) return battery1Icon
   return battery0Icon
 }
 
@@ -233,16 +175,28 @@ const getSignalIcon = (signal: number) => {
   return signalMap[level]
 }
 
-const getStatusIcon = (status: string) => {
+const getStatusIcon = (status: DeviceStatus) => {
   if (status === 'normal') return normalIcon
   if (status === 'warning') return warningIcon
   return offlineIcon
 }
+
+const handleViewDetail = (record: DeviceTableItem) => {
+  const deviceName = record.name && record.name !== '--' ? record.name : ''
+  router.push({
+    name: 'DeviceDetail',
+    params: { id: String(record.id) },
+    query: deviceName ? { name: deviceName } : undefined,
+  })
+}
+
+onMounted(() => {
+  fetchDeviceList()
+})
 </script>
 
 <template>
   <div class="device-list-container">
-
     <div class="filter-container">
       <a-row :gutter="16"
              align="middle">
@@ -286,7 +240,8 @@ const getStatusIcon = (status: string) => {
         <a-col style="margin-left: auto">
           <a-button type="primary"
                     class="action-btn">收藏</a-button>
-          <a-button class="action-btn">刷新</a-button>
+          <a-button class="action-btn"
+                    @click="fetchDeviceList">刷新</a-button>
         </a-col>
       </a-row>
     </div>
@@ -297,7 +252,7 @@ const getStatusIcon = (status: string) => {
         <a-checkbox value="index">序号</a-checkbox>
         <a-checkbox value="sn">SN</a-checkbox>
         <a-checkbox value="name">名称</a-checkbox>
-        <a-checkbox value="iccid">iccid</a-checkbox>
+        <a-checkbox value="iccid">ICCID</a-checkbox>
         <a-checkbox value="group">分组</a-checkbox>
         <a-checkbox value="scene">场景</a-checkbox>
         <a-checkbox value="power">电量</a-checkbox>
@@ -313,14 +268,16 @@ const getStatusIcon = (status: string) => {
     <a-table :columns="tableColumns"
              :data-source="dataSource"
              :row-selection="{
-        selectedRowKeys: selectedRowKeys,
+        selectedRowKeys,
         onChange: onSelectChange,
       }"
              :pagination="pagination"
-             row-key="id">
+             :loading="loading"
+             row-key="id"
+             @change="handleTableChange">
       <template #bodyCell="{ column, record, index }">
         <template v-if="column.key === 'index'">
-          {{ index + 1 }}
+          {{ (pagination.current - 1) * pagination.pageSize + index + 1 }}
         </template>
 
         <template v-if="column.key === 'power'">
@@ -342,14 +299,15 @@ const getStatusIcon = (status: string) => {
         </template>
 
         <template v-if="column.key === 'action'">
-          <a class="action-link">详情</a>
+          <a class="action-link"
+             @click="handleViewDetail(record)">详情</a>
           <a-divider type="vertical" />
           <a class="action-link">分享</a>
           <a-divider type="vertical" />
-          <a class="action-link"
-             v-if="!record.isFavorite">收藏</a>
-          <a class="action-link"
-             v-else>取消收藏</a>
+          <a v-if="!record.isFavorite"
+             class="action-link">收藏</a>
+          <a v-else
+             class="action-link">取消收藏</a>
         </template>
       </template>
     </a-table>
@@ -365,12 +323,14 @@ const getStatusIcon = (status: string) => {
 
 .page-header {
   margin-bottom: 24px;
+
   .title {
     font-size: 16px;
     font-weight: 500;
     color: #333;
     margin-right: 16px;
   }
+
   .link {
     color: #1890ff;
   }
@@ -378,6 +338,7 @@ const getStatusIcon = (status: string) => {
 
 .filter-container {
   margin-bottom: 16px;
+
   .action-btn {
     margin-left: 8px;
   }

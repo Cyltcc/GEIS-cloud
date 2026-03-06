@@ -2,6 +2,7 @@ import service from '@/utils/request';
 
 interface DevicesQuery {
 	limit?: number;
+	per_page?: number;
 	page?: number;
 	keyword?: string;
 }

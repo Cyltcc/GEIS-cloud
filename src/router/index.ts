@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory } from "vue-router";
+﻿import { createRouter, createWebHistory } from "vue-router";
 import Layout from "@/layout/index.vue";
 import { getAccessToken, removeToken } from "@/utils/auth";
 
@@ -47,6 +47,12 @@ const router = createRouter({
 							name: "DeviceFavorites",
 							component: () => import("@/views/device/DeviceList.vue"), // Placeholder
 							meta: { title: "设备收藏" },
+						},
+						{
+							path: "detail/:id",
+							name: "DeviceDetail",
+							component: () => import("@/views/device/detail/index.vue"),
+							meta: { title: "设备详情" },
 						},
 					],
 				},
