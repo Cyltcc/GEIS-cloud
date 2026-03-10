@@ -6,6 +6,7 @@ import router from "./router";
 import { setupStore } from "@/store";
 import 'uno.css'
 
+
 const app = createApp(App);
 
 app.use(router);

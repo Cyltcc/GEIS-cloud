@@ -159,8 +159,8 @@ interface FormState {
 }
 
 const formState = reactive<FormState>({
-  username: '',
-  password: '',
+  username: 'GPY',
+  password: 'GPY123456.',
   verificationCode: '',
   remember: false,
 })
@@ -202,7 +202,11 @@ const readNumber = (obj: UnknownRecord, keys: string[]): number => {
     if (typeof value === 'number' && Number.isFinite(value)) {
       return value
     }
-    if (typeof value === 'string' && value.trim() && !Number.isNaN(Number(value))) {
+    if (
+      typeof value === 'string' &&
+      value.trim() &&
+      !Number.isNaN(Number(value))
+    ) {
       return Number(value)
     }
   }
@@ -267,7 +271,7 @@ const handleLogin = async () => {
       password,
       grant_type: 'password',
       client_id: '1',
-      client_secret: ''
+      client_secret: '',
     })
 
     const { accessToken, refreshToken, expires } = parseTokenPayload(loginResp)
@@ -280,7 +284,7 @@ const handleLogin = async () => {
       refreshToken,
       expires,
       username,
-      roles: []
+      roles: [],
     })
 
     try {
@@ -294,7 +298,10 @@ const handleLogin = async () => {
     message.success('Login successful')
     await router.replace('/dashboard')
   } catch (error) {
-    if (error instanceof Error && error.message === 'Login response missing token') {
+    if (
+      error instanceof Error &&
+      error.message === 'Login response missing token'
+    ) {
       message.error('Login failed, token not found in response')
     }
   } finally {
