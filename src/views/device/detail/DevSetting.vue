@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import DevSensor from './setting/DevSensor.vue'
+import DevFirmware from './setting/DevFirmware.vue'
+import DevRecognition from './setting/DevRecognition.vue'
 const plainOptions = ['标准模式', '低功耗模式', '高频模式']
 const value1 = ref<string>('标准模式')
 
@@ -82,7 +84,8 @@ const data = [
           <a-button style="width: 96px; background: linear-gradient(180deg, #375BF5 0%, #5B89FA 100%);"
                     type="primary">修改数据</a-button>
         </div>
-        <a-table :columns="columns"
+        <a-table class="table"
+                 :columns="columns"
                  :data-source="data"
                  :pagination="false"
                  bordered>
@@ -91,6 +94,12 @@ const data = [
       </div>
       <div class="sensor-box">
         <DevSensor />
+      </div>
+      <div class="sensor-box">
+        <DevFirmware />
+      </div>
+      <div class="sensor-box">
+        <DevRecognition />
       </div>
     </div>
   </div>
@@ -146,6 +155,32 @@ const data = [
 
   .sensor-box {
     margin-top: 20px;
+  }
+
+  .table {
+    width: 100%;
+  }
+
+  :deep(.table .expand-table .ant-table-thead > tr > th) {
+    background: #fff;
+  }
+
+  :deep(.table .ant-table) {
+    background: #ffffff;
+  }
+
+  :deep(.table .ant-table-thead > tr > th) {
+    background: #eef2ff;
+    color: #1d2129;
+    font-weight: 600;
+    text-align: center;
+    border-bottom: 1px solid #e5e9f2;
+    height: 44px;
+  }
+
+  :deep(.table .ant-table-tbody > tr > td) {
+    padding: 12px 10px;
+    text-align: center;
   }
 }
 </style>

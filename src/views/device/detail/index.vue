@@ -2,6 +2,8 @@
 import { ref } from 'vue'
 import DevInfo from './DevInfo.vue'
 import DevSetting from './DevSetting.vue'
+import ThresholdSetting from './ThresholdSetting.vue'
+import DevData from './DevData.vue'
 type TabKey =
   | 'device-info'
   | 'device-setting'
@@ -59,6 +61,8 @@ const handleChange = (value: string) => {
     <div class="detail-content-body">
       <DevInfo v-if="activeTab === 'device-info'" />
       <DevSetting v-if="activeTab === 'device-setting'" />
+      <ThresholdSetting v-if="activeTab === 'threshold-setting'" />
+      <DevData v-if="activeTab === 'device-data'" />
     </div>
   </div>
 </template>
