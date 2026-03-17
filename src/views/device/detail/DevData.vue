@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import DataPresentation from './data/DataPresentation.vue'
+import DataGIF from './data/DataGIF.vue'
 
 const lastDataColumns = [
   {
@@ -83,6 +84,9 @@ const lastData = ref([
     </div>
     <div>
       <DataPresentation />
+    </div>
+    <div>
+      <DataGIF />
     </div>
   </div>
 </template>

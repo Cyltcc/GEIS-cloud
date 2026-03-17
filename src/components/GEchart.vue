@@ -5,7 +5,9 @@
         <span class="ge-chart__dot"
               :style="{ backgroundColor: color }"></span>
         <span class="ge-chart__title-text">{{ title }}</span>
-        <span class="ge-chart__unit">({{ unit }})</span>
+        <span v-if="unit"
+              class="ge-chart__unit">({{ unit }})</span>
+        <span v-else></span>
       </div>
       <i style="width: 16px; height: 15px; cursor: pointer;"
          class="i-custom:chart"></i>
@@ -32,7 +34,6 @@ type Props = {
 
 const props = withDefaults(defineProps<Props>(), {
   title: '土壤钾',
-  unit: 'mg/kg',
   color: '#62d488',
   xData: () => [
     '8:00',
@@ -214,7 +215,6 @@ watch(
 .ge-chart {
   background: #ffffff;
   border: 1px solid #f0f0f0;
-  border-radius: 6px;
   padding: 12px 16px 8px;
   box-shadow: 0 1px 2px rgba(31, 31, 31, 0.04);
 }

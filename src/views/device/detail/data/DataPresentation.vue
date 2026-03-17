@@ -412,7 +412,6 @@ const selectedImageSeries = computed(() => {
   }
 
   :deep(.ant-collapse-header) {
-    padding: 12px 16px;
     align-items: center;
     background: #ffffff;
   }
@@ -429,10 +428,15 @@ const selectedImageSeries = computed(() => {
   :deep(.ant-collapse-content) {
     border-top: none;
   }
+}
 
-  :deep(.ant-collapse-content-box) {
-    padding: 0 16px 16px;
-  }
+:deep(.ant-collapse > .ant-collapse-item > .ant-collapse-header) {
+  padding: 0 !important;
+  margin-bottom: 15px;
+}
+
+:deep(.ant-collapse .ant-collapse-content > .ant-collapse-content-box) {
+  padding: 0 !important;
 }
 
 .header {
@@ -554,6 +558,7 @@ const selectedImageSeries = computed(() => {
   width: 100%;
   display: flex;
   gap: 15px;
+  margin-top: 15px;
 }
 
 .data-chart-box,

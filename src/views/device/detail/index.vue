@@ -4,6 +4,8 @@ import DevInfo from './DevInfo.vue'
 import DevSetting from './DevSetting.vue'
 import ThresholdSetting from './ThresholdSetting.vue'
 import DevData from './DevData.vue'
+import DevCalData from './DevCalData.vue'
+
 type TabKey =
   | 'device-info'
   | 'device-setting'
@@ -63,6 +65,7 @@ const handleChange = (value: string) => {
       <DevSetting v-if="activeTab === 'device-setting'" />
       <ThresholdSetting v-if="activeTab === 'threshold-setting'" />
       <DevData v-if="activeTab === 'device-data'" />
+      <DevCalData v-if="activeTab === 'cal-data'" />
     </div>
   </div>
 </template>
@@ -87,7 +90,6 @@ const handleChange = (value: string) => {
     width: 100%;
     background: #fff;
     border-radius: 4px;
-    padding: 15px;
   }
 }
 </style>
