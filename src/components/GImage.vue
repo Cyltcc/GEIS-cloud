@@ -1,4 +1,4 @@
-<template>
+w'w'w'w'w'w'w'w'w'w'w'w'w'w'w'w'w'w'w<template>
   <div class="g-image">
     <div class="g-image__header">
       <div class="g-image__title">
@@ -66,7 +66,6 @@ const props = withDefaults(defineProps<Props>(), {
   images: () => [],
 })
 
-const viewerRef = ref<HTMLElement | null>(null)
 const currentIndex = ref(0)
 const previewVisible = ref(false)
 

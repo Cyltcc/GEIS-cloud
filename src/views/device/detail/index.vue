@@ -5,6 +5,8 @@ import DevSetting from './DevSetting.vue'
 import ThresholdSetting from './ThresholdSetting.vue'
 import DevData from './DevData.vue'
 import DevCalData from './DevCalData.vue'
+import DevShare from './DevShare.vue'
+import DevLog from './DevLog.vue'
 
 type TabKey =
   | 'device-info'
@@ -26,7 +28,10 @@ const activeTab = ref<TabKey>('device-info')
 const tabItems: TabItem[] = [
   { key: 'device-info', label: '站点信息' },
   { key: 'device-setting', label: '站点设置' },
-  { key: 'threshold-setting', label: '阈值设置' },
+  {
+    key: 'threshold-setting',
+    label: '阈值设置                                 ',
+  },
   { key: 'device-data', label: '站点数据' },
   { key: 'cal-data', label: '计算数据' },
   { key: 'device-share', label: '站点分享' },
@@ -39,7 +44,7 @@ const focus = () => {}
 const handleChange = (value: string) => {
   console.log(`selected ${value}`)
 }
-</script>
+</script>wwwwwwwwwwwwwwwwwww
 
 <template>
   <div class="detail-content">
@@ -66,6 +71,8 @@ const handleChange = (value: string) => {
       <ThresholdSetting v-if="activeTab === 'threshold-setting'" />
       <DevData v-if="activeTab === 'device-data'" />
       <DevCalData v-if="activeTab === 'cal-data'" />
+      <DevShare v-if="activeTab === 'device-share'" />
+      <DevLog v-if="activeTab === 'log'" />
     </div>
   </div>
 </template>
@@ -80,7 +87,6 @@ const handleChange = (value: string) => {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 15px;
 
     .device-select {
       width: 500px;

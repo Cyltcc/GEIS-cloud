@@ -89,27 +89,27 @@ const calDataColunms = [
   {
     title: '创建时间',
     dataIndex: 'created_time',
-    algin: 'center',
+    align: 'center',
   },
   {
     title: '原始图片',
     dataIndex: 'original_image',
-    algin: 'center',
+    align: 'center',
   },
   {
     title: '处理图片',
     dataIndex: 'edit_img',
-    algin: 'center',
+    align: 'center',
   },
   {
     title: '盖度',
     dataIndex: 'cover',
-    algin: 'center',
+    align: 'center',
   },
   {
     title: '相机',
     dataIndex: 'camera',
-    algin: 'center',
+    align: 'center',
   },
 ]
 
