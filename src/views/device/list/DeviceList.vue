@@ -6,12 +6,12 @@ import {
   applyLocalFilters,
   extractPagination,
   mapDeviceRows,
-} from './deviceList.helpers'
+} from '../deviceList.helpers'
 import type {
   DeviceListResponse,
   DeviceStatus,
   DeviceTableItem,
-} from './deviceList.helpers'
+} from '../deviceList.helpers'
 import battery0Icon from '@/assets/icons/battery-0.svg'
 import battery1Icon from '@/assets/icons/battery-1.svg'
 import battery2Icon from '@/assets/icons/battery-2.svg'
@@ -317,7 +317,6 @@ onMounted(() => {
 <style scoped lang="scss">
 .device-list-container {
   background: #fff;
-  padding: 24px;
   min-height: 100%;
 }
 

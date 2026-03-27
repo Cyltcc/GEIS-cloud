@@ -7,6 +7,7 @@ import DevData from './DevData.vue'
 import DevCalData from './DevCalData.vue'
 import DevShare from './DevShare.vue'
 import DevLog from './DevLog.vue'
+import DevOperation from './DevOperation.vue'
 
 type TabKey =
   | 'device-info'
@@ -73,6 +74,7 @@ const handleChange = (value: string) => {
       <DevCalData v-if="activeTab === 'cal-data'" />
       <DevShare v-if="activeTab === 'device-share'" />
       <DevLog v-if="activeTab === 'log'" />
+      <DevOperation v-if="activeTab === 'operate'" />
     </div>
   </div>
 </template>
@@ -81,7 +83,6 @@ const handleChange = (value: string) => {
 .detail-content {
   width: 100%;
   height: 100%;
-  padding: 15px;
 
   .detail-content-header {
     display: flex;

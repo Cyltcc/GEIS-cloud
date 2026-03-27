@@ -105,7 +105,6 @@ const submitAddGroup = () => {
 <style scoped lang="scss">
 .device-group-container {
   background: #fff;
-  padding: 24px;
   min-height: 100%;
 }
 

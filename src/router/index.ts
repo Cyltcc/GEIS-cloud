@@ -39,13 +39,41 @@ const router = createRouter({
 						{
 							path: "list",
 							name: "DeviceList",
-							component: () => import("@/views/device/DeviceList.vue"),
+							component: () => import("@/views/device/list/index.vue"),
 							meta: { title: "设备列表" },
+							redirect: "/device/list/standard",
+							children: [
+
+								{
+									path: "standard",
+									name: "standard",
+									component: () => import("@/views/device/list/DeviceList.vue"),
+									meta: { title: "定位观测站" },
+								},
+								{
+									path: "video",
+									name: "video",
+									component: () => import("@/views/device/list/VideoList.vue"),
+									meta: { title: "视频监测站" },
+								},
+								{
+									path: "LORA",
+									name: "LORA",
+									component: () => import("@/views/device/list/LARO.vue"),
+									meta: { title: "LORA组网站" },
+								},
+								{
+									path: "Tiantong",
+									name: "Tiantong",
+									component: () => import("@/views/device/list/Tiantong.vue"),
+									meta: { title: "天通" },
+								},
+							]
 						},
 						{
 							path: "favorites",
 							name: "DeviceFavorites",
-							component: () => import("@/views/device/DeviceList.vue"), // Placeholder
+							component: () => import("@/views/device/DeviceFavorites.vue"),
 							meta: { title: "设备收藏" },
 						},
 						{
@@ -59,8 +87,85 @@ const router = createRouter({
 				{
 					path: "data-mgmt",
 					name: "DataMgmt",
-					component: () => import("@/views/data/DataMgmt.vue"), // Placeholder
 					meta: { title: "数据管理" },
+					children: [
+						{
+							path: "download",
+							name: "DataDownload",
+							component: () => import("@/views/data/download/index.vue"),
+							meta: { title: "数据下载" },
+						},
+						{
+							path: "compute",
+							name: "DataCompute",
+							component: () => import("@/views/data/DataCompute.vue"),
+							meta: { title: "数据计算" },
+						},
+						{
+							path: "threshold",
+							name: "ThresholdAlert",
+							component: () => import("@/views/data/ThresholdAlert.vue"),
+							meta: { title: "阈值告警" },
+						},
+						{
+							path: "abnormal",
+							name: "AbnormalData",
+							component: () => import("@/views/data/AbnormalDat.vue"),
+							meta: { title: "阈值告警" },
+						},
+					]
+				},
+				{
+					path: "admin",
+					name: "Admin",
+					meta: { title: "后台管理" },
+					redirect: "/admin/device",
+					children: [
+						{
+							path: "device",
+							name: "AdminDevice",
+							component: () => import("@/views/admin/DeviceMgmt.vue"),
+							meta: { title: "设备管理" },
+						},
+						{
+							path: "sensor",
+							name: "AdminSensor",
+							component: () => import("@/views/admin/sensorMgmt/index.vue"),
+							meta: { title: "传感器管理" },
+							children: [
+								{
+									path: "data-add",
+									name: 'SensorDataAdd',
+									component: () => import("@/views/admin/sensorMgmt/detail/SensorDataAdd.vue"),
+									meta: { title: "添加传感器（数据类）" },
+								},
+								{
+									path: "data-detail/:id",
+									name: 'SensorDataDetail',
+									component: () => import("@/views/admin/sensorMgmt/detail/SensorDataDetail.vue"),
+									meta: { title: "传感器数据详情" },
+								},
+								{
+									path: "image-detail/:id",
+									name: 'SensorImageDetail',
+									component: () => import("@/views/admin/sensorMgmt/detail/SensorImageDetail.vue"),
+									meta: { title: "传感器图片详情" },
+								}
+							]
+						},
+						{
+							path: "ota",
+							name: "AdminOta",
+							component: () => import("@/views/admin/OTAMgmt.vue"),
+							meta: { title: "OTA" },
+						},
+						{
+							path: "user",
+							name: "AdminUser",
+							component: () => import("@/views/admin/UserMgmt.vue"),
+							meta: { title: "用户管理" },
+						},
+					],
 				},
 			],
 		},

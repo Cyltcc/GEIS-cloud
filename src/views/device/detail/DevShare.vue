@@ -22,7 +22,7 @@
       </div>
       <a-button class="download-btn"
                 type="primary">
-        保存二维�?
+        保存二维码
       </a-button>
     </div>
     <div class="share-box-right">
@@ -67,7 +67,8 @@
               <a-radio value="forever">永久有效</a-radio>
             </a-radio-group>
           </div>
-          <a-date-picker class="date-picker"
+          <a-date-picker style="width: 280px;"
+                         class="date-picker"
                          placeholder="请选择日期" />
         </div>
       </div>

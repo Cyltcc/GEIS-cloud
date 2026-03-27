@@ -29,14 +29,22 @@
 
     <a-layout>
       <a-layout-sider width="232"
-                      theme="light">
-        <a-menu v-model:selectedKeys="state.selectedKeys"
-                style="width: 100%;"
-                mode="inline"
-                :open-keys="state.openKeys"
-                :items="items"
-                @openChange="onOpenChange"
-                @select="onSelect" />
+                      theme="light"
+                      class="sidebar">
+        <div class="sidebar-inner">
+          <a-menu v-model:selectedKeys="state.selectedKeys"
+                  class="sidebar-menu"
+                  mode="inline"
+                  :open-keys="state.openKeys"
+                  :items="menuItems"
+                  @openChange="onOpenChange"
+                  @select="onSelect" />
+          <div class="sidebar-footer"
+               @click="toggleMenuMode">
+            <span class="switch-icon">≡</span>
+            <span class="switch-text">{{ switchLabel }}</span>
+          </div>
+        </div>
       </a-layout-sider>
       <a-layout>
         <div class="breadcrumb-container">
@@ -71,6 +79,14 @@ import Data from '@/assets/icons/data.svg'
 import DataActive from '@/assets/icons/data-active.svg'
 import Vision from '@/assets/icons/vision.svg'
 import VisionActive from '@/assets/icons/vision-active.svg'
+import OTAIcon from '@/assets/icons/OTA.svg'
+import OTAActiveIcon from '@/assets/icons/OTA-active.svg'
+import admin_mgmtIcon from '@/assets/icons/admin-mgmt.svg'
+import admin_mgmtActiveIcon from '@/assets/icons/admin-mgmt-active.svg'
+import sensor_adminIcon from '@/assets/icons/sensor-admin.svg'
+import sensor_adminActiveIcon from '@/assets/icons/sensor-admin-active.svg'
+import device_adminIcon from '@/assets/icons/deivce-admin.svg'
+import device_adminActiveIcon from '@/assets/icons/deivce-admin-active.svg'
 import searchIcon from '@/assets/icons/search.svg'
 import informIcon from '@/assets/icons/inform.svg'
 import adminIcon from '@/assets/icons/admin.svg'
@@ -102,33 +118,60 @@ function getItem(
   } as ItemType
 }
 
-const getActiveRootMenuKey = () => {
-  const selectedKey = state.selectedKeys[0]
+const getRootMenuKey = (selectedKey?: string) => {
+  if (!selectedKey) return undefined
   if (selectedKey === 'Dashboard') return 'Dashboard'
   if (selectedKey === 'DataViz') return 'DataViz'
   if (
     selectedKey === 'Device' ||
     selectedKey === 'DeviceGroup' ||
     selectedKey === 'DeviceList' ||
+    selectedKey === 'standard' ||
+    selectedKey === 'video' ||
+    selectedKey === 'LORA' ||
+    selectedKey === 'Tiantong' ||
     selectedKey === 'DeviceFavorites' ||
     selectedKey === 'DeviceDetail'
   ) {
     return 'Device'
   }
-  if (selectedKey === 'DataMgmt' || selectedKey === 'DataList')
+  if (
+    selectedKey === 'DataMgmt' ||
+    selectedKey === 'DataDownload' ||
+    selectedKey === 'DataCompute' ||
+    selectedKey === 'ThresholdAlert' ||
+    selectedKey === 'AbnormalData'
+  ) {
     return 'DataMgmt'
-  return ''
+  }
+  return undefined
+}
+
+const getActiveRootMenuKey = () => {
+  const selectedKey = state.selectedKeys[0]
+  return getRootMenuKey(selectedKey)
 }
 
 const renderMenuIcon =
   (
     normalSrc: string,
     activeSrc: string,
-    menuKey: 'Dashboard' | 'DataViz' | 'Device' | 'DataMgmt'
+    menuKey:
+      | 'Dashboard'
+      | 'DataViz'
+      | 'Device'
+      | 'DataMgmt'
+      | 'AdminDevice'
+      | 'AdminSensor'
+      | 'AdminOta'
+      | 'AdminUser'
   ) =>
-  () =>
-    h('img', {
-      src: getActiveRootMenuKey() === menuKey ? activeSrc : normalSrc,
+  () => {
+    const activeRootKey = getActiveRootMenuKey()
+    const isActive =
+      activeRootKey === menuKey || state.selectedKeys[0] === menuKey
+    return h('img', {
+      src: isActive ? activeSrc : normalSrc,
       alt: 'menu-icon',
       style: {
         width: '16px',
@@ -136,8 +179,9 @@ const renderMenuIcon =
         display: 'block',
       },
     })
+  }
 
-const items: ItemType[] = reactive([
+const frontItems: ItemType[] = reactive([
   getItem('首页', 'Dashboard', renderMenuIcon(Home, HomeActive, 'Dashboard')),
   getItem(
     '数据可视化',
@@ -158,14 +202,75 @@ const items: ItemType[] = reactive([
     '数据管理',
     'DataMgmt',
     renderMenuIcon(Data, DataActive, 'DataMgmt'),
-    [getItem('数据列表', 'DataList')]
+    [
+      getItem('数据下载', 'DataDownload'),
+      getItem('数据计算', 'DataCompute'),
+      getItem('阈值告警', 'ThresholdAlert'),
+      getItem('异常数据', 'AbnormalData'),
+    ]
   ),
 ])
 
+const adminItems: ItemType[] = reactive([
+  getItem(
+    '设备管理',
+    'AdminDevice',
+    renderMenuIcon(device_adminIcon, device_adminActiveIcon, 'AdminDevice')
+  ),
+  getItem(
+    '传感器管理',
+    'AdminSensor',
+    renderMenuIcon(sensor_adminIcon, sensor_adminActiveIcon, 'AdminSensor')
+  ),
+  getItem(
+    'OTA',
+    'AdminOta',
+    renderMenuIcon(OTAIcon, OTAActiveIcon, 'AdminOta')
+  ),
+  getItem(
+    '用户管理',
+    'AdminUser',
+    renderMenuIcon(admin_mgmtIcon, admin_mgmtActiveIcon, 'AdminUser')
+  ),
+])
+
+const isBackend = computed(() => route.path.startsWith('/admin'))
+const menuItems = computed(() => (isBackend.value ? adminItems : frontItems))
+
+const getSelectedKeyFromRoute = (routeName?: string) => {
+  if (!routeName) return 'Dashboard'
+  if (
+    routeName === 'DeviceDetail' ||
+    routeName === 'standard' ||
+    routeName === 'video' ||
+    routeName === 'LORA' ||
+    routeName === 'Tiantong'
+  ) {
+    return 'DeviceList'
+  }
+  if (
+    routeName === 'Admin' ||
+    routeName === 'AdminDevice' ||
+    routeName === 'AdminSensor' ||
+    routeName === 'AdminOta' ||
+    routeName === 'AdminUser'
+  ) {
+    return routeName === 'Admin' ? 'AdminDevice' : routeName
+  }
+  return routeName
+}
+
+const initialSelectedKey = getSelectedKeyFromRoute(
+  route.name as string | undefined
+)
+const initialOpenKey = getRootMenuKey(initialSelectedKey)
+
 const state = reactive({
-  rootSubmenuKeys: ['Device', 'DataMgmt'],
-  openKeys: ['Device'],
-  selectedKeys: ['Dashboard'],
+  openKeys:
+    initialOpenKey && ['Device', 'DataMgmt'].includes(initialOpenKey)
+      ? [initialOpenKey]
+      : [],
+  selectedKeys: [initialSelectedKey],
 })
 
 const routesMap: Record<string, string> = {
@@ -174,14 +279,22 @@ const routesMap: Record<string, string> = {
   DeviceGroup: '/device/group',
   DeviceList: '/device/list',
   DeviceFavorites: '/device/favorites',
-  DataList: '/data/list',
+  DataDownload: '/data-mgmt/download',
+  DataCompute: '/data-mgmt/compute',
+  ThresholdAlert: '/data-mgmt/threshold',
+  AbnormalData: '/data-mgmt/abnormal',
+  AdminDevice: '/admin/device',
+  AdminSensor: '/admin/sensor',
+  AdminOta: '/admin/ota',
+  AdminUser: '/admin/user',
 }
 
 const onOpenChange = (openKeys: string[]) => {
   const latestOpenKey = openKeys.find(
     (key) => state.openKeys.indexOf(key) === -1
   )
-  if (state.rootSubmenuKeys.indexOf(latestOpenKey as string) === -1) {
+  const rootSubmenuKeys = isBackend.value ? [] : ['Device', 'DataMgmt']
+  if (rootSubmenuKeys.indexOf(latestOpenKey as string) === -1) {
     state.openKeys = openKeys
   } else {
     state.openKeys = latestOpenKey ? [latestOpenKey] : []
@@ -198,6 +311,50 @@ const onSelect = ({ key }: { key: string }) => {
 
 const breadcrumbItems = computed(() => {
   const items: BreadcrumbItem[] = []
+
+  const isSensorAddRoute =
+    route.name === 'SensorDataAdd' ||
+    route.path.startsWith('/admin/sensor/data-add')
+
+  if (isSensorAddRoute) {
+    items.push({
+      title: '传感器管理',
+      path: '/admin/sensor',
+      clickable: true,
+    })
+    items.push({
+      title: '添加传感器（数据类）',
+      clickable: false,
+    })
+    return items
+  }
+
+  const isSensorDetailRoute =
+    route.matched.some(
+      (record) =>
+        record.name === 'SensorDataDetail' ||
+        record.name === 'SensorImageDetail'
+    ) ||
+    route.path.startsWith('/admin/sensor/data-detail/') ||
+    route.path.startsWith('/admin/sensor/image-detail/')
+
+  if (isSensorDetailRoute) {
+    items.push({
+      title: '传感器管理',
+      path: '/admin/sensor',
+      clickable: true,
+    })
+
+    const rawName = route.query.name
+    const sensorName = String(
+      Array.isArray(rawName) ? rawName[0] : rawName ?? ''
+    ).trim()
+    items.push({
+      title: sensorName ? `传感器详情（${sensorName}）` : '传感器详情',
+      clickable: false,
+    })
+    return items
+  }
 
   const isDeviceDetailRoute =
     route.matched.some((record) => record.name === 'DeviceDetail') ||
@@ -221,6 +378,17 @@ const breadcrumbItems = computed(() => {
     return items
   }
 
+  const isDeviceListRoute = route.path.startsWith('/device/list')
+
+  if (isDeviceListRoute) {
+    items.push({
+      title: '设备列表',
+      path: '/device/list',
+      clickable: false,
+    })
+    return items
+  }
+
   const currentRoute = route.matched[route.matched.length - 1]
   if (currentRoute?.meta?.title) {
     items.push({
@@ -239,20 +407,31 @@ const navigateTo = (path: string | undefined) => {
   }
 }
 
+const switchLabel = computed(() => (isBackend.value ? '切换前台' : '切换后台'))
+
+const toggleMenuMode = () => {
+  if (isBackend.value) {
+    router.push('/dashboard')
+    return
+  }
+  router.push('/admin/device')
+}
+
 watch(
-  () => route.name,
-  (val) => {
-    if (val) {
-      const routeName = val as string
-      state.selectedKeys = [
-        routeName === 'DeviceDetail' ? 'DeviceList' : routeName,
-      ]
-      // Auto expand submenu if needed
-      if (val.toString().startsWith('Device')) {
-        if (!state.openKeys.includes('Device')) {
-          state.openKeys.push('Device')
-        }
-      }
+  () => route.fullPath,
+  () => {
+    const routeName = route.name as string | undefined
+    const selectedKey = getSelectedKeyFromRoute(routeName)
+    state.selectedKeys = [selectedKey]
+    if (isBackend.value) {
+      state.openKeys = []
+      return
+    }
+    const rootKey = getRootMenuKey(selectedKey)
+    if (rootKey && ['Device', 'DataMgmt'].includes(rootKey)) {
+      state.openKeys = [rootKey]
+    } else {
+      state.openKeys = []
     }
   },
   { immediate: true }
@@ -318,10 +497,51 @@ watch(
     }
   }
 
+  .sidebar {
+    background: #fff;
+    border-right: 1px solid #f0f0f0;
+
+    .sidebar-inner {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sidebar-menu {
+      flex: 1;
+      width: 100%;
+      border-right: none;
+    }
+
+    .sidebar-footer {
+      height: 52px;
+      border-top: 1px solid #f0f0f0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      cursor: pointer;
+      color: #333;
+
+      .switch-icon {
+        font-size: 18px;
+        line-height: 1;
+      }
+
+      .switch-text {
+        font-size: 14px;
+      }
+
+      &:hover {
+        background: #f7f7f7;
+      }
+    }
+  }
+
   .breadcrumb-container {
     height: 40px;
     opacity: 1;
-    margin: 24px 16px 0;
+    margin: 12px;
     padding: 8px 16px;
     background-color: #fff;
 
@@ -350,9 +570,9 @@ watch(
   }
 
   .content {
-    height: calc(100vh - 56px - 40px - 24px);
-    margin: 24px 16px;
-    padding: 0;
+    height: calc(100vh - 56px - 40px - 36px);
+    margin: 0 12px;
+    padding: 20px;
     overflow: auto;
     background: #fff; // Let views decide background
   }
