@@ -140,6 +140,12 @@ const router = createRouter({
 									meta: { title: "添加传感器（数据类）" },
 								},
 								{
+									path: "image-add",
+									name: 'SensorImageAdd',
+									component: () => import("@/views/admin/sensorMgmt/detail/SensorImageAdd.vue"),
+									meta: { title: "添加传感器（图片类）" },
+								},
+								{
 									path: "data-detail/:id",
 									name: 'SensorDataDetail',
 									component: () => import("@/views/admin/sensorMgmt/detail/SensorDataDetail.vue"),

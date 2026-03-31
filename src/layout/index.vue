@@ -314,7 +314,9 @@ const breadcrumbItems = computed(() => {
 
   const isSensorAddRoute =
     route.name === 'SensorDataAdd' ||
-    route.path.startsWith('/admin/sensor/data-add')
+    route.name === 'SensorImageAdd' ||
+    route.path.startsWith('/admin/sensor/data-add') ||
+    route.path.startsWith('/admin/sensor/image-add')
 
   if (isSensorAddRoute) {
     items.push({
@@ -323,7 +325,10 @@ const breadcrumbItems = computed(() => {
       clickable: true,
     })
     items.push({
-      title: '添加传感器（数据类）',
+      title:
+        route.name === 'SensorImageAdd'
+          ? '添加传感器（图片类）'
+          : '添加传感器（数据类）',
       clickable: false,
     })
     return items

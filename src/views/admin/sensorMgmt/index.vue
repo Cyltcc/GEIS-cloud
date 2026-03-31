@@ -27,7 +27,8 @@ const isDetailRoute = computed(
   () =>
     route.name === 'SensorDataDetail' ||
     route.name === 'SensorImageDetail' ||
-    route.name === 'SensorDataAdd'
+    route.name === 'SensorDataAdd' ||
+    route.name === 'SensorImageAdd'
 )
 </script>
 
