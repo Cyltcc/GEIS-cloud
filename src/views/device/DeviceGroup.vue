@@ -4,7 +4,6 @@ import GModal from '@/components/GModal.vue'
 
 const showAdd = ref(false)
 const form = ref({ name: '', devices: [] })
-const formRef = ref()
 
 const keyword = ref('')
 
@@ -88,8 +87,7 @@ const submitAddGroup = () => {
   <g-modal v-model="showAdd"
            title="添加分组"
            @ok="submitAddGroup">
-    <a-form :model="form"
-            ref="formRef">
+    <a-form :model="form">
       <a-form-item label="分组名称"
                    name="name">
         <a-input v-model:value="form.name" />

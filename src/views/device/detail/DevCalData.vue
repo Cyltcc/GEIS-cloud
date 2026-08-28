@@ -157,6 +157,7 @@ const chartSeries = {
   cover: {
     title: '植被盖度',
     color: '#62d488',
+    unit: '%',
     min: 0,
     max: 100,
     yData: [12, 18, 25, 32, 28, 36, 42, 38, 30, 35, 40, 45],
@@ -164,6 +165,7 @@ const chartSeries = {
   NDVI: {
     title: 'NDVI',
     color: '#6aa9ff',
+    unit: '',
     min: 0.6,
     max: 1.2,
     yData: [
@@ -173,6 +175,7 @@ const chartSeries = {
   leafArea: {
     title: '叶面积指数',
     color: '#ff8a34',
+    unit: '',
     min: 0,
     max: 500,
     yData: [120, 160, 210, 260, 230, 300, 340, 320, 280, 310, 360, 400],
@@ -180,11 +183,12 @@ const chartSeries = {
   phenology: {
     title: '物候',
     color: '#8a74ff',
+    unit: '',
     min: 0,
     max: 100,
     yData: [15, 22, 30, 38, 36, 48, 55, 50, 42, 46, 58, 62],
   },
-} as const
+}
 
 const currentSeries = computed(
   () => chartSeries[activeKey.value as keyof typeof chartSeries]

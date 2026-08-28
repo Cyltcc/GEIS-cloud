@@ -169,7 +169,7 @@ const filteredUsers = computed(() => {
   const query = keyword.value.trim()
   if (!query) return users.value
   return users.value.filter(
-    (item) => item.username.includes(query) || item.phone.includes(query),
+    (item) => item.username.includes(query) || item.phone.includes(query)
   )
 })
 
@@ -177,7 +177,7 @@ const userModalVisible = ref(false)
 const userModalMode = ref<'add' | 'edit'>('add')
 const editingId = ref<number | null>(null)
 const userModalTitle = computed(() =>
-  userModalMode.value === 'edit' ? '编辑用户' : '添加用户',
+  userModalMode.value === 'edit' ? '编辑用户' : '添加用户'
 )
 const formRef = ref()
 const userForm = reactive({
@@ -258,7 +258,8 @@ const handleUserConfirm = async () => {
       row.email = userForm.email
       message.success('用户信息已更新')
     } else {
-      const nextId = users.value.reduce((max, item) => Math.max(max, item.id), 0) + 1
+      const nextId =
+        users.value.reduce((max, item) => Math.max(max, item.id), 0) + 1
       users.value.push({
         id: nextId,
         username: userForm.username,
@@ -297,7 +298,9 @@ const handleDeleteConfirm = () => {
     deleteModalVisible.value = false
     return
   }
-  users.value = users.value.filter((item) => !deletingIds.value.includes(item.id))
+  users.value = users.value.filter(
+    (item) => !deletingIds.value.includes(item.id)
+  )
   selectedRowKeys.value = []
   deletingIds.value = []
   deleteModalVisible.value = false

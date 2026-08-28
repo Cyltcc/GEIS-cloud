@@ -303,7 +303,7 @@ const mockDataSeries = {
     xData: mockTimeLabels,
     yData: [6, 10, 14, 16, 15, 18, 20, 19, 17, 21, 18, 16],
   },
-} as const
+}
 
 const selectedDataSeries = computed(() => {
   const date = dayjs().format('YYYY-MM-DD')
@@ -389,7 +389,7 @@ const mockImageSeries = {
       },
     ],
   },
-} as const
+}
 
 const selectedImageSeries = computed(() => {
   return checkedImageValue.value

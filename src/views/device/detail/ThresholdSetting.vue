@@ -104,8 +104,8 @@ const openEditModal = (record: ThresholdRow) => {
   editingKey.value = record.key
   formState.alarmType = record.alarmType
   formState.unit = record.unit
-  formState.min = record.min
-  formState.max = record.max
+  formState.min = String(record.min)
+  formState.max = String(record.max)
   modalVisible.value = true
 }
 

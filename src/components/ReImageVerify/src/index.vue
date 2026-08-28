@@ -32,7 +32,7 @@ watch(imgCode, newValue => {
   emit("update:code", newValue);
 });
 
-defineExpose({ getImgCode });
+defineExpose({ domRef, getImgCode });
 </script>
 
 <template>

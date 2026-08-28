@@ -3,7 +3,6 @@ import { computed, onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { getDevicesList } from '@/api/devices/devices'
 import {
-  applyLocalFilters,
   extractPagination,
   mapDeviceRows,
 } from '../deviceList.helpers'
@@ -51,35 +50,75 @@ const visibleColumns = ref([
 ])
 
 const allColumns = [
-  { title: '序号', key: 'index', dataIndex: 'index', width: 60 },
-  { title: 'SN', key: 'sn', dataIndex: 'sn' },
-  { title: '名称', key: 'name', dataIndex: 'name' },
-  { title: 'ICCID', key: 'iccid', dataIndex: 'iccid' },
-  { title: '分组', key: 'group', dataIndex: 'group' },
-  { title: '场景', key: 'scene', dataIndex: 'scene' },
-  { title: '电量', key: 'power', dataIndex: 'power', width: 80 },
-  { title: '信号', key: 'signal', dataIndex: 'signal', width: 80 },
-  { title: '状态', key: 'status', dataIndex: 'status', width: 80 },
-  { title: '位置', key: 'location', dataIndex: 'location' },
+  {
+    title: '序号',
+    key: 'index',
+    dataIndex: 'index',
+    width: 60,
+    align: 'center',
+  },
+  { title: 'SN', key: 'sn', dataIndex: 'sn', align: 'center' },
+  {
+    title: '名称',
+    key: 'name',
+    dataIndex: 'name',
+    width: 220,
+    align: 'center',
+  },
+  { title: 'ICCID', key: 'iccid', dataIndex: 'iccid', align: 'center' },
+  { title: '分组', key: 'group', dataIndex: 'group', align: 'center' },
+  {
+    title: '场景',
+    key: 'scene',
+    dataIndex: 'scene',
+    width: 100,
+    align: 'center',
+  },
+  {
+    title: '电量',
+    key: 'power',
+    dataIndex: 'power',
+    width: 60,
+    align: 'center',
+  },
+  {
+    title: '信号',
+    key: 'signal',
+    dataIndex: 'signal',
+    width: 60,
+    align: 'center',
+  },
+  {
+    title: '状态',
+    key: 'status',
+    dataIndex: 'status',
+    width: 60,
+    align: 'center',
+  },
+  { title: '位置', key: 'location', dataIndex: 'location', align: 'center' },
   {
     title: '设备启用时间',
     key: 'enabledTime',
     dataIndex: 'enabledTime',
     sorter: true,
+
+    align: 'center',
   },
   {
     title: '最新上线时间',
     key: 'lastOnline',
     dataIndex: 'lastOnline',
     sorter: true,
+    align: 'center',
   },
   {
     title: '最新数据上报时间',
     key: 'lastReport',
     dataIndex: 'lastReport',
     sorter: true,
+    align: 'center',
   },
-  { title: '操作', key: 'action', width: 200, fixed: 'right' },
+  { title: '操作', key: 'action', width: 200, fixed: 'right', align: 'center' },
 ]
 
 const tableColumns = computed(() => {
@@ -111,6 +150,9 @@ const requestParams = computed(() => ({
   limit: pagination.pageSize,
   per_page: pagination.pageSize,
   keyword: filters.keyword || undefined,
+  group: filters.group,
+  scene: filters.scene,
+  status: filters.status,
 }))
 
 const fetchDeviceList = async (): Promise<void> => {
@@ -122,10 +164,9 @@ const fetchDeviceList = async (): Promise<void> => {
 
     const rawList = Array.isArray(response?.data) ? response.data : []
     const mappedList = mapDeviceRows(rawList)
-    const filteredList = applyLocalFilters(mappedList, filters)
-    const paginationMeta = extractPagination(response, filteredList.length)
+    const paginationMeta = extractPagination(response, mappedList.length)
 
-    dataSource.value = filteredList
+    dataSource.value = mappedList
     pagination.current = paginationMeta.current ?? pagination.current
     pagination.pageSize = paginationMeta.pageSize ?? pagination.pageSize
     pagination.total = paginationMeta.total
@@ -204,8 +245,10 @@ onMounted(() => {
           <a-select v-model:value="filters.group"
                     placeholder="选择分组"
                     style="width: 150px">
-            <a-select-option value="group1">分组1</a-select-option>
-            <a-select-option value="group2">分组2</a-select-option>
+            <a-select-option value="分组1">分组1</a-select-option>
+            <a-select-option value="分组2">分组2</a-select-option>
+            <a-select-option value="实验田">实验田</a-select-option>
+            <a-select-option value="示范区">示范区</a-select-option>
           </a-select>
         </a-col>
         <a-col>
@@ -214,6 +257,8 @@ onMounted(() => {
                     style="width: 150px">
             <a-select-option value="farm">农田</a-select-option>
             <a-select-option value="forest">森林</a-select-option>
+            <a-select-option value="greenhouse">温室</a-select-option>
+            <a-select-option value="water">水文</a-select-option>
           </a-select>
         </a-col>
         <a-col>
@@ -221,15 +266,22 @@ onMounted(() => {
                     placeholder="选择状态"
                     style="width: 150px">
             <a-select-option value="normal">正常</a-select-option>
+            <a-select-option value="warning">告警</a-select-option>
             <a-select-option value="offline">离线</a-select-option>
           </a-select>
         </a-col>
         <a-col>
-          <a-input-search v-model:value="filters.keyword"
-                          placeholder="输入关键词以检索"
-                          style="width: 250px"
-                          enter-button
-                          @search="handleSearch" />
+          <a-input v-model:value="filters.keyword"
+                   placeholder="输入关键词以检索"
+                   style="width: 300px"
+                   enter-button
+                   @search="handleSearch">
+            <template #prefix>
+              <i class="i-custom:search-input"
+                 style="width: 16px; height: 16px; display: inline-block;"></i>
+            </template>
+          </a-input>
+
         </a-col>
         <a-col>
           <a-button type="primary"
@@ -265,8 +317,10 @@ onMounted(() => {
       </a-checkbox-group>
     </div>
 
-    <a-table :columns="tableColumns"
+    <a-table class="list-table"
+             :columns="tableColumns"
              :data-source="dataSource"
+             :scroll="{ x: 1500 }"
              :row-selection="{
         selectedRowKeys,
         onChange: onSelectChange,
@@ -367,5 +421,36 @@ onMounted(() => {
   &:hover {
     text-decoration: underline;
   }
+}
+
+:deep(.list-table .ant-table-thead > tr > th) {
+  background: #eef2ff;
+  color: #1d2129;
+  font-weight: 600;
+  text-align: center;
+  border-bottom: 1px solid #e5e9f2;
+  height: 44px;
+}
+
+:deep(
+    .list-table.ant-table-wrapper
+      .ant-table-container
+      table
+      > thead
+      > tr:first-child
+      > *:first-child
+  ) {
+  border-start-start-radius: 0 !important;
+}
+
+:deep(
+    .list-table.ant-table-wrapper
+      .ant-table-container
+      table
+      > thead
+      > tr:first-child
+      > *:last-child
+  ) {
+  border-start-end-radius: 0 !important;
 }
 </style>

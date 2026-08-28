@@ -16,7 +16,31 @@
              class="icon-btn"
              alt="inform" />
         <div class="lang-select">
-          <span>中文简体</span>
+          <a-dropdown :trigger="['click']">
+            <a class="dropdown-trigger"
+               @click.prevent>
+              <span>{{ currentLanguageLabel }}</span>
+              <DownOutlined />
+            </a>
+            <template #overlay>
+              <a-menu :items="languageItems"
+                      :selected-keys="[locale]"
+                      @click="onLanguageMenuClick" />
+            </template>
+          </a-dropdown>
+          <a-divider type="vertical" />
+          <a-dropdown :trigger="['click']">
+            <a class="dropdown-trigger"
+               @click.prevent>
+              <span>{{ currentTimezoneLabel }}</span>
+              <DownOutlined />
+            </a>
+            <template #overlay>
+              <a-menu :items="timezoneItems"
+                      :selected-keys="[currentTimezone]"
+                      @click="onTimezoneMenuClick" />
+            </template>
+          </a-dropdown>
         </div>
         <div class="user-profile">
           <img :src="adminIcon"
@@ -71,6 +95,8 @@
 <script setup lang="ts">
 import { ref, watch, computed, reactive, h } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
+import { DownOutlined } from '@ant-design/icons-vue'
 import Home from '@/assets/icons/home.svg'
 import HomeActive from '@/assets/icons/home-actice.svg'
 import Device from '@/assets/icons/device.svg'
@@ -91,10 +117,39 @@ import searchIcon from '@/assets/icons/search.svg'
 import informIcon from '@/assets/icons/inform.svg'
 import adminIcon from '@/assets/icons/admin.svg'
 import type { ItemType } from 'ant-design-vue'
+import type { MenuProps } from 'ant-design-vue'
+import { useLocale } from '@/composables/useLocale'
 
 const route = useRoute()
 const router = useRouter()
 const collapsed = ref(false)
+const { t } = useI18n()
+const { locale, setLocale } = useLocale()
+const currentTimezone = ref('UTC+8')
+
+const languageItems = computed(() => [
+  { key: 'zh-CN', label: '中文简体' },
+  { key: 'en-US', label: 'English' },
+])
+
+const timezoneItems = [
+  { key: 'UTC+8', label: 'UTC+8' },
+  { key: 'UTC+0', label: 'UTC+0' },
+]
+
+const currentLanguageLabel = computed(() =>
+  locale.value === 'zh-CN' ? '中文简体' : 'English'
+)
+
+const currentTimezoneLabel = computed(() => currentTimezone.value)
+
+const onLanguageMenuClick: MenuProps['onClick'] = ({ key }) => {
+  setLocale(key as 'zh-CN' | 'en-US')
+}
+
+const onTimezoneMenuClick: MenuProps['onClick'] = ({ key }) => {
+  currentTimezone.value = String(key)
+}
 
 interface BreadcrumbItem {
   title: string
@@ -165,6 +220,7 @@ const renderMenuIcon =
       | 'AdminSensor'
       | 'AdminOta'
       | 'AdminUser'
+	  | 'AdminTenant'
   ) =>
   () => {
     const activeRootKey = getActiveRootMenuKey()
@@ -181,61 +237,72 @@ const renderMenuIcon =
     })
   }
 
-const frontItems: ItemType[] = reactive([
-  getItem('首页', 'Dashboard', renderMenuIcon(Home, HomeActive, 'Dashboard')),
+const frontItems = computed<ItemType[]>(() => [
   getItem(
-    '数据可视化',
+    t('menu.dashboard'),
+    'Dashboard',
+    renderMenuIcon(Home, HomeActive, 'Dashboard')
+  ),
+  getItem(
+    t('menu.dataViz'),
     'DataViz',
     renderMenuIcon(Vision, VisionActive, 'DataViz')
   ),
   getItem(
-    '设备管理',
+    t('menu.deviceMgmt'),
     'Device',
     renderMenuIcon(Device, DeviceActive, 'Device'),
     [
-      getItem('设备分组', 'DeviceGroup'),
-      getItem('设备列表', 'DeviceList'),
-      getItem('设备收藏', 'DeviceFavorites'),
+      getItem(t('menu.deviceGroup'), 'DeviceGroup'),
+      getItem(t('menu.deviceList'), 'DeviceList'),
+      getItem(t('menu.deviceFavorites'), 'DeviceFavorites'),
     ]
   ),
   getItem(
-    '数据管理',
+    t('menu.dataMgmt'),
     'DataMgmt',
     renderMenuIcon(Data, DataActive, 'DataMgmt'),
     [
-      getItem('数据下载', 'DataDownload'),
-      getItem('数据计算', 'DataCompute'),
-      getItem('阈值告警', 'ThresholdAlert'),
-      getItem('异常数据', 'AbnormalData'),
+      getItem(t('menu.dataDownload'), 'DataDownload'),
+      getItem(t('menu.dataCompute'), 'DataCompute'),
+      getItem(t('menu.thresholdAlert'), 'ThresholdAlert'),
+      getItem(t('menu.abnormalData'), 'AbnormalData'),
     ]
   ),
 ])
 
-const adminItems: ItemType[] = reactive([
+const adminItems = computed<ItemType[]>(() => [
   getItem(
-    '设备管理',
+    t('menu.adminDevice'),
     'AdminDevice',
     renderMenuIcon(device_adminIcon, device_adminActiveIcon, 'AdminDevice')
   ),
   getItem(
-    '传感器管理',
+    t('menu.adminSensor'),
     'AdminSensor',
     renderMenuIcon(sensor_adminIcon, sensor_adminActiveIcon, 'AdminSensor')
   ),
   getItem(
-    'OTA',
+    t('menu.adminOta'),
     'AdminOta',
     renderMenuIcon(OTAIcon, OTAActiveIcon, 'AdminOta')
   ),
+    getItem(
+    t('menu.adminTenant'),
+    'AdminTenant',
+    renderMenuIcon(admin_mgmtIcon, admin_mgmtActiveIcon, 'AdminTenant')
+  ),
   getItem(
-    '用户管理',
+    t('menu.adminUser'),
     'AdminUser',
     renderMenuIcon(admin_mgmtIcon, admin_mgmtActiveIcon, 'AdminUser')
   ),
 ])
 
 const isBackend = computed(() => route.path.startsWith('/admin'))
-const menuItems = computed(() => (isBackend.value ? adminItems : frontItems))
+const menuItems = computed(() =>
+  isBackend.value ? adminItems.value : frontItems.value
+)
 
 const getSelectedKeyFromRoute = (routeName?: string) => {
   if (!routeName) return 'Dashboard'
@@ -252,9 +319,22 @@ const getSelectedKeyFromRoute = (routeName?: string) => {
     routeName === 'Admin' ||
     routeName === 'AdminDevice' ||
     routeName === 'AdminSensor' ||
+    routeName === 'SensorDataAdd' ||
+    routeName === 'SensorImageAdd' ||
+    routeName === 'SensorDataDetail' ||
+    routeName === 'SensorImageDetail' ||
     routeName === 'AdminOta' ||
-    routeName === 'AdminUser'
+    routeName === 'AdminUser' ||
+    routeName === 'AdminTenant'
   ) {
+    if (
+      routeName === 'SensorDataAdd' ||
+      routeName === 'SensorImageAdd' ||
+      routeName === 'SensorDataDetail' ||
+      routeName === 'SensorImageDetail'
+    ) {
+      return 'AdminSensor'
+    }
     return routeName === 'Admin' ? 'AdminDevice' : routeName
   }
   return routeName
@@ -287,6 +367,7 @@ const routesMap: Record<string, string> = {
   AdminSensor: '/admin/sensor',
   AdminOta: '/admin/ota',
   AdminUser: '/admin/user',
+  AdminTenant: '/admin/tenant',
 }
 
 const onOpenChange = (openKeys: string[]) => {
@@ -320,15 +401,15 @@ const breadcrumbItems = computed(() => {
 
   if (isSensorAddRoute) {
     items.push({
-      title: '传感器管理',
+      title: t('menu.adminSensor'),
       path: '/admin/sensor',
       clickable: true,
     })
     items.push({
       title:
         route.name === 'SensorImageAdd'
-          ? '添加传感器（图片类）'
-          : '添加传感器（数据类）',
+          ? t('route.sensorImageAdd')
+          : t('route.sensorDataAdd'),
       clickable: false,
     })
     return items
@@ -345,7 +426,7 @@ const breadcrumbItems = computed(() => {
 
   if (isSensorDetailRoute) {
     items.push({
-      title: '传感器管理',
+      title: t('menu.adminSensor'),
       path: '/admin/sensor',
       clickable: true,
     })
@@ -355,7 +436,9 @@ const breadcrumbItems = computed(() => {
       Array.isArray(rawName) ? rawName[0] : rawName ?? ''
     ).trim()
     items.push({
-      title: sensorName ? `传感器详情（${sensorName}）` : '传感器详情',
+      title: sensorName
+        ? t('route.sensorDetailWithName', { name: sensorName })
+        : t('route.sensorDetail'),
       clickable: false,
     })
     return items
@@ -367,7 +450,7 @@ const breadcrumbItems = computed(() => {
 
   if (isDeviceDetailRoute) {
     items.push({
-      title: '设备列表',
+      title: t('menu.deviceList'),
       path: '/device/list',
       clickable: true,
     })
@@ -377,7 +460,9 @@ const breadcrumbItems = computed(() => {
       Array.isArray(rawName) ? rawName[0] : rawName ?? ''
     ).trim()
     items.push({
-      title: deviceName ? `设备详情（${deviceName}）` : '设备详情',
+      title: deviceName
+        ? t('route.deviceDetailWithName', { name: deviceName })
+        : t('route.deviceDetail'),
       clickable: false,
     })
     return items
@@ -387,7 +472,7 @@ const breadcrumbItems = computed(() => {
 
   if (isDeviceListRoute) {
     items.push({
-      title: '设备列表',
+      title: t('menu.deviceList'),
       path: '/device/list',
       clickable: false,
     })
@@ -395,9 +480,9 @@ const breadcrumbItems = computed(() => {
   }
 
   const currentRoute = route.matched[route.matched.length - 1]
-  if (currentRoute?.meta?.title) {
+  if (currentRoute?.meta?.titleKey) {
     items.push({
-      title: currentRoute.meta.title as string,
+      title: t(currentRoute.meta.titleKey as string),
       path: currentRoute.path,
       clickable: false,
     })
@@ -412,7 +497,9 @@ const navigateTo = (path: string | undefined) => {
   }
 }
 
-const switchLabel = computed(() => (isBackend.value ? '切换前台' : '切换后台'))
+const switchLabel = computed(() =>
+  isBackend.value ? t('layout.switchToFrontend') : t('layout.switchToBackend')
+)
 
 const toggleMenuMode = () => {
   if (isBackend.value) {
@@ -498,6 +585,24 @@ watch(
         align-items: center;
         gap: 8px;
         cursor: pointer;
+      }
+
+      .lang-select {
+        display: flex;
+        align-items: center;
+        color: #262626;
+
+        .dropdown-trigger {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          color: #262626;
+          text-decoration: none;
+
+          &:hover {
+            color: #1677ff;
+          }
+        }
       }
     }
   }

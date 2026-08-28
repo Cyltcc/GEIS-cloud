@@ -1,7 +1,11 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import { useLocale } from '@/composables/useLocale'
+
+const { antLocale } = useLocale()
+</script>
 
 <template>
-  <a-config-provider>
+  <a-config-provider :locale="antLocale">
     <router-view />
   </a-config-provider>
 </template>

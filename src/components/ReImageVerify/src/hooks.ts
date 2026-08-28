@@ -53,7 +53,7 @@ function draw(dom: HTMLCanvasElement, width: number, height: number) {
   ctx.fillStyle = randomColor(180, 230);
   ctx.fillRect(0, 0, width, height);
   for (let i = 0; i < 4; i += 1) {
-    const text = NUMBER_STRING[randomNum(0, NUMBER_STRING.length)];
+    const text = NUMBER_STRING.charAt(randomNum(0, NUMBER_STRING.length));
     imgCode += text;
     const fontSize = randomNum(18, 41);
     const deg = randomNum(-30, 30);

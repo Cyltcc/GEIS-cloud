@@ -1,160 +1,286 @@
 import axios, {
-  AxiosError,
-  AxiosHeaders,
-  type AxiosRequestConfig,
-  type AxiosResponse,
+	type AxiosInstance,
+	AxiosHeaders,
+	type AxiosError,
+	type InternalAxiosRequestConfig,
+	type AxiosRequestConfig,
+	type AxiosResponse,
 } from "axios";
 import { message } from "ant-design-vue";
-import { getAccessToken, removeToken } from "@/utils/auth";
+import { appConfig } from "@/config/env";
+import { mockRefreshToken } from "@/mocks/auth";
+import type { ApiResponse } from "@/types/api";
+import { normalizeAuthToken } from "@/utils/authToken";
+import {
+	getRefreshToken,
+	getToken,
+	isAccessTokenExpired,
+	removeToken,
+	setToken,
+	type DataInfo,
+} from "@/utils/auth";
 
-export interface ApiResponse<T = unknown> {
-  code?: number | string;
-  message?: string;
-  msg?: string;
-  data?: T;
-  [key: string]: unknown;
-}
+export type { ApiResponse } from "@/types/api";
 
 export interface RequestConfig<D = unknown> extends AxiosRequestConfig<D> {
-  skipAuth?: boolean;
-  skipErrorMessage?: boolean;
-  rawResponse?: boolean;
+	skipAuth?: boolean;
+	skipTokenRefresh?: boolean;
+	skipErrorMessage?: boolean;
+	_retry?: boolean;
 }
 
-const SUCCESS_CODES = new Set<number | string>([0, 200, "0", "200"]);
-const DEFAULT_TIMEOUT = 15000;
+type InternalRequestConfig<D = unknown> = InternalAxiosRequestConfig<D> &
+	Pick<RequestConfig<D>, "skipAuth" | "skipTokenRefresh" | "skipErrorMessage" | "_retry">;
 
-let lastErrorText = "";
-let lastErrorTime = 0;
+type RequestInstance = Omit<
+	AxiosInstance,
+	"get" | "post" | "put" | "delete" | "request"
+> & {
+	<T = unknown>(config: RequestConfig): Promise<ApiResponse<T>>;
+	get<T = unknown>(url: string, config?: RequestConfig): Promise<ApiResponse<T>>;
+	post<T = unknown, D = unknown>(
+		url: string,
+		data?: D,
+		config?: RequestConfig<D>
+	): Promise<ApiResponse<T>>;
+	put<T = unknown, D = unknown>(
+		url: string,
+		data?: D,
+		config?: RequestConfig<D>
+	): Promise<ApiResponse<T>>;
+	delete<T = unknown>(
+		url: string,
+		config?: RequestConfig
+	): Promise<ApiResponse<T>>;
+};
 
 const service = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "/api",
-  timeout: DEFAULT_TIMEOUT,
+	baseURL: appConfig.apiBaseUrl,
+	timeout: 15000,
 });
 
-const isSuccessCode = (code: unknown): boolean => {
-  if (code === undefined || code === null || code === "") {
-    return true;
-  }
-  return SUCCESS_CODES.has(code as number | string);
+const request = service as RequestInstance;
+
+let refreshPromise: Promise<string> | null = null;
+let isLoggingOut = false;
+
+const isUnauthorized = (response?: AxiosResponse<ApiResponse>) => {
+	return (
+		response?.status === 401 ||
+		response?.data?.code === 401 ||
+		response?.data?.code === "401"
+	);
 };
 
-const showError = (text: string) => {
-  const now = Date.now();
-  if (text === lastErrorText && now - lastErrorTime < 1200) {
-    return;
-  }
-  lastErrorText = text;
-  lastErrorTime = now;
-  message.error(text);
+const isSuccess = (code: unknown) => {
+	return (
+		code === undefined ||
+		code === 0 ||
+		code === 200 ||
+		code === "0" ||
+		code === "200"
+	);
 };
 
-const getBusinessMessage = (payload: unknown): string => {
-  if (!payload || typeof payload !== "object") {
-    return "Request failed";
-  }
-  const data = payload as Record<string, unknown>;
-  if (typeof data.message === "string" && data.message.trim()) {
-    return data.message;
-  }
-  if (typeof data.msg === "string" && data.msg.trim()) {
-    return data.msg;
-  }
-  return "Request failed";
+const getErrorMessage = (data: unknown, fallback = "Request failed") => {
+	if (!data || typeof data !== "object") {
+		return fallback;
+	}
+
+	const payload = data as Record<string, unknown>;
+	return String(payload.message || payload.msg || fallback);
 };
 
-const getHttpErrorMessage = (error: AxiosError): string => {
-  const responseData = error.response?.data;
-  if (responseData && typeof responseData === "object") {
-    const payload = responseData as Record<string, unknown>;
-    if (typeof payload.message === "string" && payload.message.trim()) {
-      return payload.message;
-    }
-    if (typeof payload.msg === "string" && payload.msg.trim()) {
-      return payload.msg;
-    }
-  }
-
-  switch (error.response?.status) {
-    case 400:
-      return "Bad request";
-    case 401:
-      return "Login expired, please sign in again";
-    case 403:
-      return "No permission to access this resource";
-    case 404:
-      return "Request resource not found";
-    case 408:
-      return "Request timeout";
-    case 500:
-      return "Server internal error";
-    case 502:
-      return "Bad gateway";
-    case 503:
-      return "Service unavailable";
-    case 504:
-      return "Gateway timeout";
-    default:
-      return error.message || "Network error";
-  }
+const getAppPath = (path: string) => {
+	const base = import.meta.env.BASE_URL || "/";
+	const normalizedBase = base.endsWith("/") ? base.slice(0, -1) : base;
+	const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+	return `${normalizedBase}${normalizedPath}` || normalizedPath;
 };
 
-service.interceptors.request.use(
-  (config) => {
-    const nextConfig = config as RequestConfig;
-    const token = getAccessToken();
+const goLogin = (showMessage = true) => {
+	if (isLoggingOut) return;  // 已在进行注销，直接返回
+	isLoggingOut = true;
 
-    if (token && !nextConfig.skipAuth) {
-      const headers = AxiosHeaders.from(nextConfig.headers);
-      if (!headers.has("Authorization")) {
-        headers.set("Authorization", `Bearer ${token}`);
-      }
-      nextConfig.headers = headers;
-    }
+	removeToken();
+	const loginPath = getAppPath("/login");
+	if (location.pathname !== loginPath) {
+		if (showMessage) {
+			message.error("登录已过期，请重新登录");
+		}
+		location.href = loginPath;
+	}
+};
 
-    return nextConfig;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
+export const refreshAccessToken = async () => {
+	if (!refreshPromise) {
+		refreshPromise = (async () => {
+			const currentRefreshToken = getRefreshToken();
+
+			if (!currentRefreshToken) {
+				throw new Error("Refresh token not found");
+			}
+
+			const refreshPayload = {
+				refreshToken: currentRefreshToken,
+				refresh_token: currentRefreshToken,
+			};
+			const responseData = appConfig.useMock
+				? await mockRefreshToken(refreshPayload)
+				: await request.put<ApiResponse>(
+						"/auth/refresh",
+						refreshPayload,
+						{
+							skipAuth: true,
+							skipTokenRefresh: true,
+							skipErrorMessage: true,
+						}
+					);
+
+			const nextToken = normalizeAuthToken(responseData);
+
+			if (!nextToken.accessToken) {
+				throw new Error("Refresh response missing token");
+			}
+
+			setToken({
+				accessToken: nextToken.accessToken,
+				refreshToken: nextToken.refreshToken || currentRefreshToken,
+				expires: nextToken.expires,
+			} as DataInfo<number>);
+
+			// 刷新成功，重置注销标志（可选，避免后续再次刷新失败时被锁住）
+			isLoggingOut = false;
+
+			return nextToken.accessToken;
+		})().catch((error) => {
+
+			message.error("登录已失效，请重新登录");
+			goLogin(false);
+			// 重新抛出错误，让等待的请求也能感知到失败
+			throw error;
+		}).finally(() => {
+			refreshPromise = null;
+		});
+	}
+
+	return refreshPromise;
+};
+
+const retryRequest = (config: RequestConfig, token: string) => {
+	const headers = AxiosHeaders.from(
+		config.headers as AxiosHeaders | undefined
+	);
+	headers.set("Authorization", `Bearer ${token}`);
+
+	config.headers = headers;
+	config._retry = true;
+
+	return service(config);
+};
+
+const ensureAccessToken = async (config: InternalRequestConfig) => {
+	if (config.skipAuth) {
+		return "";
+	}
+
+	const currentToken = getToken();
+	if (!currentToken?.accessToken) {
+		return "";
+	}
+
+	if (config.skipTokenRefresh || !isAccessTokenExpired(currentToken)) {
+		return currentToken.accessToken;
+	}
+
+	return refreshAccessToken();
+};
+
+service.interceptors.request.use(async (config) => {
+	const requestConfig = config as InternalRequestConfig;
+	let token = "";
+
+	try {
+		token = await ensureAccessToken(requestConfig);
+	} catch (error) {
+		goLogin();
+		return Promise.reject(error);
+	}
+
+	if (token && !requestConfig.skipAuth) {
+		const headers = AxiosHeaders.from(requestConfig.headers);
+		headers.set("Authorization", `Bearer ${token}`);
+		requestConfig.headers = headers;
+	}
+
+	return requestConfig;
+});
+
+const handleResponse = async (response: AxiosResponse<ApiResponse>) => {
+	const typedResponse = response as AxiosResponse<ApiResponse>;
+	const config = typedResponse.config as RequestConfig;
+	const { data } = typedResponse;
+
+	if (!isSuccess(data?.code)) {
+		const errorText = getErrorMessage(data);
+
+		if (
+			isUnauthorized(typedResponse) &&
+			!config._retry &&
+			!config.skipTokenRefresh
+		) {
+			try {
+				const token = await refreshAccessToken();
+				return retryRequest(config, token);
+			} catch (refreshError) {
+				goLogin();
+				return Promise.reject(refreshError);
+			}
+		}
+
+		if (isUnauthorized(typedResponse) && !config.skipTokenRefresh) {
+			goLogin();
+		}
+
+		if (!config.skipErrorMessage) {
+			message.error(errorText);
+		}
+		return Promise.reject(new Error(errorText));
+	}
+
+	return data;
+};
 
 service.interceptors.response.use(
-  (response: AxiosResponse<ApiResponse>) => {
-    const requestConfig = response.config as RequestConfig;
+	handleResponse as never,
+	async (error: AxiosError<ApiResponse>) => {
+		const config = (error.config || {}) as RequestConfig;
 
-    if (requestConfig.rawResponse) {
-      return response;
-    }
+		if (
+			isUnauthorized(error.response) &&
+			!config._retry &&
+			!config.skipTokenRefresh
+		) {
+			try {
+				const token = await refreshAccessToken();
+				return retryRequest(config, token);
+			} catch (refreshError) {
+				goLogin();
+				return Promise.reject(refreshError);
+			}
+		}
 
-    const payload = response.data;
-    if (!isSuccessCode(payload?.code)) {
-      const errMessage = getBusinessMessage(payload);
-      if (!requestConfig.skipErrorMessage) {
-        showError(errMessage);
-      }
-      return Promise.reject(new Error(errMessage));
-    }
+		const errorText = getErrorMessage(error.response?.data, error.message);
+		if (!config.skipErrorMessage) {
+			message.error(errorText);
+		}
 
-    return payload;
-  },
-  (error: AxiosError) => {
-    const requestConfig = (error.config || {}) as RequestConfig;
+		if (isUnauthorized(error.response) && !config.skipTokenRefresh) {
+			goLogin();
+		}
 
-    if (error.response?.status === 401) {
-      removeToken();
-      if (location.pathname !== "/login") {
-        location.href = "/login";
-      }
-    }
-
-    const errMessage = getHttpErrorMessage(error);
-    if (!requestConfig.skipErrorMessage) {
-      showError(errMessage);
-    }
-
-    return Promise.reject(error);
-  }
+		return Promise.reject(error);
+	}
 );
 
-export default service;
+export default request;

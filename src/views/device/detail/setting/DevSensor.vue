@@ -36,6 +36,11 @@ const cameraTypeOptions = [
 const portOptions = [2, 4, 6, 8]
 const waitTimeOptions = [30, 60, 90]
 const cameraPortOptions = [610, 630, 710, 730]
+const defaultSensorType = sensorTypeOptions[0]?.value ?? ''
+const defaultCameraType = cameraTypeOptions[0]?.value ?? ''
+const defaultPort = portOptions[0] ?? 0
+const defaultWaitTime = waitTimeOptions[0] ?? 0
+const defaultCameraPort = cameraPortOptions[0] ?? 0
 
 const sensorColumns = [
   {
@@ -129,9 +134,9 @@ const createId = (prefix: string) =>
 const addSensorRow = () => {
   sensorData.value.push({
     id: createId('s'),
-    sensorType: sensorTypeOptions[0].value,
-    port: portOptions[0],
-    time: waitTimeOptions[0],
+    sensorType: defaultSensorType,
+    port: defaultPort,
+    time: defaultWaitTime,
     metrics: [],
   })
 }
@@ -144,8 +149,8 @@ const removeSensorRow = (id: string) => {
 const addCameraRow = () => {
   cameraData.value.push({
     id: createId('c'),
-    cameraType: cameraTypeOptions[0].value,
-    port: cameraPortOptions[0],
+    cameraType: defaultCameraType,
+    port: defaultCameraPort,
     key: '',
     name: '',
   })

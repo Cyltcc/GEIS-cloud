@@ -1,11 +1,7 @@
 import service from '@/utils/request';
-
-interface DevicesQuery {
-	limit?: number;
-	per_page?: number;
-	page?: number;
-	keyword?: string;
-}
+import { appConfig } from '@/config/env';
+import { getMockDevicesList } from '@/mocks/devices';
+import type { DevicesQuery } from './types';
 
 
 /**
@@ -14,6 +10,10 @@ interface DevicesQuery {
  * @returns 设备列表数据
  */
 export const getDevicesList = (query: DevicesQuery) => {
+	if (appConfig.useMock) {
+		return getMockDevicesList(query);
+	}
+
 	return service.get('/devices', { params: query });
 }
 

@@ -157,7 +157,9 @@ const buildOptions = (): echarts.EChartsOption => {
 const withAlpha = (hex: string, alpha: number) => {
   const match = hex.match(/^#?([0-9a-fA-F]{6})$/)
   if (!match) return hex
-  const value = Number.parseInt(match[1], 16)
+  const hexValue = match[1]
+  if (!hexValue) return hex
+  const value = Number.parseInt(hexValue, 16)
   const r = (value >> 16) & 255
   const g = (value >> 8) & 255
   const b = value & 255

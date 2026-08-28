@@ -50,7 +50,7 @@ export const updateConfig = (device_id: string, config: any) => {
  * 批量更新修改接口
  */
 export const uploadConfigMulti = (devices: any, config: any) => {
-	return service.post('/device/config/multi', { data: config });
+	return service.post('/device/config/multi', { data: { devices, config } });
 }
 
 /**
